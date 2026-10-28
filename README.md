@@ -2,11 +2,11 @@
 
 **Multiple Codex accounts. One Mac. Update Codex, run `sync`, keep working.**
 
-MultiCodex lets you run multiple instances of the official Codex desktop app side by side. Give work, personal, or client accounts their own named launcher, colored Finder icon, sign-in, and local profile—without repeatedly signing in and out.
+MultiCodex lets you run multiple instances of the official ChatGPT desktop app, including Codex, side by side. Give work, personal, or client accounts their own named launcher, colored Finder icon, sign-in, and local profile—without repeatedly signing in and out.
 
-![Multiple Codex instances with distinct colored icons in the macOS Dock](icons.png)
+![The built-in Dock icon picker showing ChatGPT, Codex, and Space](icons.png)
 
-The screenshot shows the older re-signed runtime. Current launchers keep the official runtime trusted, so the ten custom colors apply to Finder and Spotlight launchers. For distinct running icons, choose a different built-in **Settings → General → Appearance → Dock icon** in each profile: ChatGPT or Codex, plus Space when that option is available.
+Choose a different built-in icon in each profile under **Settings → Appearance → Advanced → Dock icon**. The screenshot above shows the three choices in the current app; availability may vary by version. MultiCodex's ten custom colors identify the named Finder and Spotlight launchers. [See the annotated screenshots below](#distinguish-running-profiles-in-the-dock).
 
 [Quick start](#quick-start) · [Features](#what-you-get) · [Updates](#updating) · [Commands](#commands) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
@@ -38,7 +38,7 @@ This is an alternative for people who need **multiple desktop accounts running a
 - **Efficient copies on APFS.** Copy-on-write cloning can share unchanged app data with the source. Actual space and speed depend on your filesystem, app size, and subsequent changes; other filesystems fall back to full copies.
 - **Local profile management.** No MultiCodex account, hosted backend, telemetry, or request proxy. MultiCodex manages files and launches apps on your Mac.
 - **Working built-in chat tools.** The original signed runtime can expose `list_threads`, `read_thread`, and `send_message_to_thread` to chats, subject to the app's normal tool availability.
-- **A small tool you can inspect.** Bash and built-in macOS utilities. Generated icons are included; Python is only needed if you want to regenerate them.
+- **A small tool you can inspect.** Bash and built-in macOS utilities. Generated icons are included. Optional conversation sharing requires Python 3; regenerating icons also requires Pillow.
 
 Use it when you want to keep account contexts separate, recognize the right window at a glance, or work across several accounts without a sign-out/sign-in loop. MultiCodex does not add account quota, route requests to other model providers, or change what your accounts can access.
 
@@ -46,9 +46,9 @@ Use it when you want to keep account contexts separate, recognize the right wind
 
 ### Requirements
 
-- **A Mac supported by the official Codex desktop app.** The build used during development requires macOS 13+ and Apple silicon; newer official builds may change those requirements.
+- **macOS 14+ with a compatible official app build.** OpenAI supports Apple silicon and Intel Macs; these changes have been validated on Apple silicon. See [OpenAI's current requirements](https://help.openai.com/en/articles/9275200-downloading-the-chatgpt-macos-app).
 - Git to clone this repository. If needed, install Apple's command-line tools with `xcode-select --install`.
-- The official Codex desktop app, or use `multicodex install` below.
+- The current ChatGPT desktop app that includes Codex, or use `multicodex install` below. ChatGPT Classic is a separate app and is not supported.
 - APFS is recommended for space-efficient copies. A code-signing certificate is optional; ad-hoc signing is the fallback.
 
 ### 1. Get MultiCodex
@@ -79,13 +79,13 @@ multicodex install
 
 The installer downloads from OpenAI, verifies the app's signature, signing team, and bundle identifier before installing, and may request an administrator password to write to `/Applications`.
 
-If your Codex app lives somewhere else, set its path before using MultiCodex:
+If your app lives somewhere else, set its path before using MultiCodex:
 
 ```sh
 export MULTICODEX_APP="/Applications/Codex.app"
 ```
 
-Use the actual path on your Mac and keep this setting consistent across commands. See [configuration](#configuration) for persistence.
+Use the actual path on your Mac and keep this setting consistent across commands. On Intel Macs, install the matching build from [OpenAI](https://chatgpt.com/download/) and select it here; Intel profiles have not been verified with these changes. See [configuration](#configuration) for persistence.
 
 ### 3. Create and launch your accounts
 
@@ -107,12 +107,12 @@ multicodex launch --all
 
 Profiles start in sequence to avoid competing during startup. Already running profiles are skipped; each new app is given up to 30 seconds to appear as a running process. This checks process startup, not successful sign-in.
 
-**Launch a profile however you like.** `multicodex launch <name>`, Finder, Spotlight, or a pinned Dock icon all work: each profile app carries its own isolation settings internally, so it opens its own account whichever way it is started. Once launched, use the Dock or Cmd-Tab to switch between running windows.
+Start a profile with `multicodex launch <name>` or its named Finder or Spotlight launcher. Each launcher supplies that profile's isolation settings. Use the Dock or Cmd-Tab to switch between running windows; a pinned Dock icon may start the official app's default profile instead.
 
-Profiles created before 1.0.1 predate that launcher. Rebuild them once so Dock and Spotlight launches work:
+After updating an older MultiCodex checkout, quit your profiles and upgrade their launchers:
 
 ```sh
-multicodex sync --force
+multicodex sync
 ```
 
 Existing launchers that ran a re-signed copy are rebuilt by the next `multicodex sync`, even when the official app's version has not changed. This repairs missing built-in chat tools caused by the app-tools service rejecting the copy's code-signing identity. Keep the official source app installed at the configured path; every profile now runs that signed executable. Account data stays in the same profile directories.
@@ -124,12 +124,29 @@ multicodex doctor
 
 `list` shows colors, whether a local `auth.json` exists, and update status. It does not validate the login with OpenAI. `doctor` reports the source app, signing identity, icon count, and filesystem information.
 
+## Distinguish running profiles in the Dock
+
+Use ChatGPT's built-in Dock icon preference to give up to three running instances different icons while keeping the official app's signature and direct chat tools working.
+
+Open the intended profile from its named launcher, such as **Codex work**, and press **⌘,** to open Settings. Follow the numbered callouts in these screenshots:
+
+1. Select **Appearance** in the Settings sidebar.
+2. Expand **Advanced** at the bottom of the Appearance page.
+
+![Annotated screenshot: select Appearance, then expand Advanced](docs/images/dock-icon-settings.png)
+
+3. Scroll to **Dock icon** and choose **ChatGPT**, **Codex**, or **Space** when available.
+
+![Annotated screenshot: find the Dock icon row and choose one of the three built-in icons](docs/images/dock-icon-picker.png)
+
+Repeat in each profile, choosing a different icon. Each profile keeps its own preference. For example, use ChatGPT for your default account, Codex for work, and Space for personal. The available choices and layout can vary by app version; the screenshots show three options. The ten MultiCodex colors continue to identify the named Finder and Spotlight launchers.
+
 ## Updating
 
 ### Update Codex
 
-1. Quit the profile apps you intend to rebuild.
-2. Update the official app using its updater, or quit it and run `multicodex install` to reinstall the latest download.
+1. Quit all running profiles and the default official app; they share the installed runtime.
+2. Update the official app using its updater, then quit it again, or run `multicodex install` to reinstall the latest download.
 3. Sync and relaunch:
 
 ```sh
@@ -143,7 +160,7 @@ Or update a single profile:
 multicodex sync personal
 ```
 
-Sync replaces the profile's launcher bundle. It preserves its name, color, bundle identifier, Codex home, and Electron data. Profiles execute the installed source app, so quit every profile before updating that app, then sync and relaunch. Creating or syncing profiles briefly restarts the Dock to refresh cached launcher icons.
+Sync replaces the profile's launcher bundle and preserves its name, color, bundle identifier, Codex home, and Electron data. Creating or syncing profiles briefly restarts the Dock to refresh cached launcher icons.
 
 ### Update MultiCodex itself
 
@@ -154,18 +171,18 @@ git pull --ff-only
 multicodex --version
 ```
 
-There is no build step. Updating MultiCodex and updating the official app are separate operations.
+There is no build step. After pulling launcher changes, quit your profiles and run `multicodex sync` to apply them. Updating MultiCodex and updating the official app are separate operations.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
 | `multicodex install` | Download, verify, and install the official app. Asks before reinstalling an existing copy. |
-| `multicodex create <name> [--color <color>]` | Create an isolated profile and its branded, locally re-signed app. |
+| `multicodex create <name> [--color <color>]` | Create an isolated profile and its branded, locally signed launcher. |
 | `multicodex launch <name>` | Launch with the profile's isolation settings. |
 | `multicodex launch --all` | Start every profile in sequence, skipping those already running. Aliases: `launch -a`, `open-all`, `openall`. |
 | `multicodex list` | Show profiles, colors, local auth-file presence, and sync status. Alias: `ls`. |
-| `multicodex sync [name]` | Rebuild stale or missing profile apps from the installed source app. |
+| `multicodex sync [--force] [name]` | Rebuild outdated or missing launchers. `--force` rebuilds regardless of version. |
 | `multicodex repair <name> [--from /old/profile/home]` | Restore access to sessions after moving a profile; defaults to the old `~/.codex-profiles/<name>` location. |
 | `multicodex sessions sync <name> [--with <peer>]` | Sync conversations and message history both ways with `default` Codex or a named peer. Requires Python 3. |
 | `multicodex sessions enable <name> [--with <peer>]` | Sync now and install a local agent that repeats every 15 seconds and at login. |
@@ -190,10 +207,10 @@ MultiCodex performs cloning, branding, signing, profile storage, and launching o
 | Default location | Contents |
 | --- | --- |
 | `/Applications/ChatGPT.app` | Official source app. |
-| `~/Applications/Codex <name>.app` | Profile app, created locally from the source. |
+| `~/Applications/Codex <name>.app` | Named profile launcher, created locally from the source. |
 | `~/.multicodex/profiles/<name>` | Profile's Codex home, including credentials and local session data. |
 | `~/Library/Application Support/MultiCodex/<name>` | Profile's Electron data. |
-| `~/.codex` | Default Codex home, shown as `default` in the list. Profile commands do not modify it. |
+| `~/.codex` | Default Codex home, shown as `default` in the list. Creating and launching profiles leave it separate; opt-in session sharing can modify its conversation and sidebar state. |
 
 Back up profile data before removing a profile. `remove` deletes its local credentials, conversations, settings, and app; it does not delete the account at OpenAI.
 
@@ -252,9 +269,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, icon generation, and contribu
 bin/multicodex          Bash CLI
 assets/icons/          Ten generated profile icons
 assets/electron.icns   Source artwork for icon generation
-icons.png              README Dock preview
+icons.png              Screenshot of the built-in Dock icon picker
+docs/images/           Annotated settings screenshots
 tools/make_icons.py    Optional icon generator
-tests/                 Isolated CLI regression tests
+tools/session_sync.py  Optional conversation-sharing helper
+tests/                 Isolated CLI and conversation-sharing tests
 ```
 
 ## License and credits

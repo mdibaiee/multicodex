@@ -34,7 +34,7 @@ Fresh profiles require their own sign-in. MultiCodex does not copy your existing
 
 Quit the profile, confirm `MULTICODEX_APP` points to the updated source, and run `multicodex sync <name>`. Then relaunch with the CLI. Both `CFBundleShortVersionString` and `CFBundleVersion` are tracked. Profiles created before build tracking are rebuilt on their next sync.
 
-Sync skips profiles whose recorded version/build match and whose app exists. It is not a repair or force-rebuild command for arbitrary bundle damage. Report that case before deleting profile data.
+Sync skips a profile only when its recorded source version, build, and launcher revision match and its launcher executable exists. To rebuild a damaged or incorrectly branded launcher regardless of those checks, quit the profile and run `multicodex sync --force <name>`. Its account data stays in place.
 
 ## `list_threads`, `read_thread`, or `send_message_to_thread` are missing
 
@@ -53,7 +53,7 @@ This restores the trusted local connection; it does not grant another account ac
 
 ## Running profiles look the same in the Dock
 
-In each running instance, open **Settings → General → Appearance → Dock icon** and select a different built-in icon. The installed build offers ChatGPT and Codex; Space is also available when its option is enabled. The preference is stored per profile and changes the icon at runtime without modifying the signed official app. The ten MultiCodex colors still identify the Finder and Spotlight launchers.
+In each running instance, open **Settings → Appearance → Advanced → Dock icon** and select a different built-in icon. Available choices include ChatGPT, Codex, and Space, depending on the app version and enabled options. See the [annotated walkthrough](../README.md#distinguish-running-profiles-in-the-dock). The preference is stored per profile and changes the icon at runtime without modifying the signed official app. The ten MultiCodex colors still identify the Finder and Spotlight launchers.
 
 ## A conversation fails with `failed to resolve rollout path`
 
@@ -102,9 +102,9 @@ If you already have an appropriate identity in your Keychain, select it explicit
 export MULTICODEX_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 ```
 
-Use your actual identity. Unlock your Keychain if necessary. A certificate is optional for local use, and selecting one does not guarantee that macOS will preserve every permission. Review requests in System Settings → Privacy & Security for the specific profile.
+Use your actual identity. Unlock your Keychain if necessary. A certificate is optional for local use, and selecting one does not guarantee that macOS will preserve every permission. Review requests in System Settings → Privacy & Security for the official app used by your profiles.
 
-## Icons look unchanged
+## Finder and Spotlight launcher icons look unchanged
 
 Run `multicodex colors` to check that the generated icons are available. The repository's `assets/icons` directory must remain accessible. Creating or syncing a profile restarts the Dock to clear its icon cache. If it still looks stale:
 
@@ -112,7 +112,7 @@ Run `multicodex colors` to check that the generated icons are available. The rep
 killall Dock
 ```
 
-The Dock disappears briefly and returns. If a profile was built without its icon, restoring icon files alone does not force a rebuild of an otherwise up-to-date profile.
+The Dock disappears briefly and returns. If a launcher was built without its icon, restore the icon files, quit that profile, and run `multicodex sync --force <name>`. Running apps use the official app's built-in Dock icon preference instead of the launcher's color.
 
 ## Copies use more disk than expected
 

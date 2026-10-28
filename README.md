@@ -2,9 +2,11 @@
 
 **Multiple Codex accounts. One Mac. Update Codex, run `sync`, keep working.**
 
-MultiCodex lets you run multiple instances of the official Codex desktop app side by side. Give work, personal, or client accounts their own app name, colored icon, sign-in, and local profile—without repeatedly signing in and out.
+MultiCodex lets you run multiple instances of the official Codex desktop app side by side. Give work, personal, or client accounts their own named launcher, colored Finder icon, sign-in, and local profile—without repeatedly signing in and out.
 
 ![Multiple Codex instances with distinct colored icons in the macOS Dock](icons.png)
+
+The screenshot shows the older re-signed runtime. Current launchers keep the official runtime trusted, so the ten custom colors apply to Finder and Spotlight launchers. For distinct running icons, choose a different built-in **Settings → General → Appearance → Dock icon** in each profile: ChatGPT or Codex, plus Space when that option is available.
 
 [Quick start](#quick-start) · [Features](#what-you-get) · [Updates](#updating) · [Commands](#commands) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
@@ -14,7 +16,7 @@ I built MultiCodex because I needed it. Codex Router stopped working for my setu
 
 My priority was simple: **running multiple Codex accounts should not mean waiting for a matching tool release whenever Codex updates.**
 
-MultiCodex builds your profiles from the official app already installed on your Mac. It changes the copies' names, icons, and bundle identifiers, then re-signs them locally. It does not patch Codex's JavaScript or maintain a modified version of its application code.
+MultiCodex builds named launchers from the official app already installed on your Mac. The launchers carry your profile settings and execute the untouched official app. This keeps the original code-signing identity required by Codex's built-in chat tools. It does not patch Codex's JavaScript or maintain a modified version of its application code.
 
 For ordinary updates, update the official app and run:
 
@@ -31,11 +33,11 @@ This is an alternative for people who need **multiple desktop accounts running a
 - **Accounts side by side.** Keep work, personal, and client sessions open at the same time.
 - **Launch all your profiles.** `multicodex launch --all` starts them in sequence, skips apps already running, and reports startup failures.
 - **Separate local profiles.** Each instance has its own Codex home and Electron data directory for credentials, settings, and local session state.
-- **Apps you can tell apart.** Names such as `Codex work` and `Codex personal`, distinct Dock and Cmd-Tab entries, and ten colored icons.
+- **Named launchers.** Names such as `Codex work` and `Codex personal` and ten colored icons in Finder and Spotlight. Running instances use the official app's Dock/Cmd-Tab name and icon.
 - **Simple updates.** Sync every profile or just one. Version and build checks flag profiles that need rebuilding, including updates with the same display version.
 - **Efficient copies on APFS.** Copy-on-write cloning can share unchanged app data with the source. Actual space and speed depend on your filesystem, app size, and subsequent changes; other filesystems fall back to full copies.
 - **Local profile management.** No MultiCodex account, hosted backend, telemetry, or request proxy. MultiCodex manages files and launches apps on your Mac.
-- **Separate macOS app identities.** Each profile has its own bundle identifier. macOS may ask for privacy permissions per profile; a suitable signing certificate helps keep grants stable across rebuilds.
+- **Working built-in chat tools.** The original signed runtime can expose `list_threads`, `read_thread`, and `send_message_to_thread` to chats, subject to the app's normal tool availability.
 - **A small tool you can inspect.** Bash and built-in macOS utilities. Generated icons are included; Python is only needed if you want to regenerate them.
 
 Use it when you want to keep account contexts separate, recognize the right window at a glance, or work across several accounts without a sign-out/sign-in loop. MultiCodex does not add account quota, route requests to other model providers, or change what your accounts can access.
@@ -113,6 +115,8 @@ Profiles created before 1.0.1 predate that launcher. Rebuild them once so Dock a
 multicodex sync --force
 ```
 
+Existing launchers that ran a re-signed copy are rebuilt by the next `multicodex sync`, even when the official app's version has not changed. This repairs missing built-in chat tools caused by the app-tools service rejecting the copy's code-signing identity. Keep the official source app installed at the configured path; every profile now runs that signed executable. Account data stays in the same profile directories.
+
 ```sh
 multicodex list
 multicodex doctor
@@ -139,7 +143,7 @@ Or update a single profile:
 multicodex sync personal
 ```
 
-Sync replaces the profile's application bundle. It preserves its name, color, bundle identifier, Codex home, and Electron data. Use the official source app for updates; use `sync` to propagate them to profiles. Creating or syncing profiles briefly restarts the Dock to refresh cached icons.
+Sync replaces the profile's launcher bundle. It preserves its name, color, bundle identifier, Codex home, and Electron data. Profiles execute the installed source app, so quit every profile before updating that app, then sync and relaunch. Creating or syncing profiles briefly restarts the Dock to refresh cached launcher icons.
 
 ### Update MultiCodex itself
 
@@ -223,7 +227,7 @@ Automatic sync runs through a macOS LaunchAgent while you are logged in. Keep Py
 
 Add needed `export` lines to `~/.zshrc` to reuse them in new terminals. Use the same configuration for creating, launching, syncing, and removing profiles.
 
-Re-signing is necessary because changing app metadata invalidates the original signature. With ad-hoc signing, privacy grants may reset after a rebuild. A suitable team-backed identity helps preserve them, but macOS can still ask for authorization. See [troubleshooting](docs/TROUBLESHOOTING.md).
+Re-signing is necessary for the branded launcher bundle because its metadata changes. The running app keeps the official source's signature and macOS privacy identity. Profile account and Electron data directories remain separate; privacy permissions are shared by the official runtime. See [troubleshooting](docs/TROUBLESHOOTING.md).
 
 ## How it works
 
@@ -232,9 +236,9 @@ Re-signing is necessary because changing app metadata invalidates the original s
 3. Remove `CFBundleIconName` so the app's asset catalog does not override the replacement `.icns`.
 4. Give the copy a URL scheme of its own (`codex-<name>:`) and drop its claim on `codex:`, `http:` and `https:`.
 5. Re-sign and verify the copy, then register it with Launch Services.
-6. Launch with `CODEX_HOME`, `CODEX_ELECTRON_USER_DATA_PATH`, and `--user-data-dir` pointing at the profile's directories.
+6. The launcher's executable starts the untouched official app with `CODEX_HOME`, `CODEX_ELECTRON_USER_DATA_PATH`, and `--user-data-dir` pointing at the profile's directories.
 
-Step 4 matters more than it looks. macOS binds one application to each URL scheme, and the app claims `codex:` as it starts. A clone that inherited that claim would take every `codex://` link on the machine the moment it was launched — including the OAuth callback that finishes an MCP login, which would then open in whichever profile ran most recently rather than the one that began the login. Giving each profile a private scheme leaves `codex:` with the official app. `multicodex doctor` reports which application currently holds it.
+Step 4 keeps the branded launcher bundles from claiming the official app's URL schemes. The running runtime retains the official app's identity and protocol behavior. External `codex://` links do not encode a MultiCodex profile, so macOS may deliver them to another running instance of the official app. This fix restores the model's built-in chat-reference tools; it does not add profile-aware URL routing. `multicodex doctor` reports the registered handler.
 
 Both environment variables matter. In the app behavior this tool was developed against, setting only `CODEX_HOME` can be overridden by the app's login-shell environment loading. The Electron data path keeps the profile configuration separate.
 

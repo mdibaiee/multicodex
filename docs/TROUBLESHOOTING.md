@@ -26,7 +26,7 @@ That setting also changes the install destination. Keep it consistent across ter
 
 ## Two profiles show the same account
 
-Quit the affected profile apps, then launch each using `multicodex launch <name>`. A direct Finder, Spotlight, or Dock launch does not inject `CODEX_HOME` and `CODEX_ELECTRON_USER_DATA_PATH`. Use the Dock to switch to an already running profile, and use the CLI to start it again after quitting.
+Quit the affected profile apps and run `multicodex sync`, then launch each using `multicodex launch <name>` or its named Finder launcher. Current launchers supply `CODEX_HOME` and `CODEX_ELECTRON_USER_DATA_PATH` themselves. A pinned Dock icon may refer directly to the official app; use the named launcher to start the intended profile, and use the Dock to switch between running windows.
 
 Fresh profiles require their own sign-in. MultiCodex does not copy your existing default account's credentials or settings into them.
 
@@ -35,6 +35,25 @@ Fresh profiles require their own sign-in. MultiCodex does not copy your existing
 Quit the profile, confirm `MULTICODEX_APP` points to the updated source, and run `multicodex sync <name>`. Then relaunch with the CLI. Both `CFBundleShortVersionString` and `CFBundleVersion` are tracked. Profiles created before build tracking are rebuilt on their next sync.
 
 Sync skips profiles whose recorded version/build match and whose app exists. It is not a repair or force-rebuild command for arbitrary bundle damage. Report that case before deleting profile data.
+
+## `list_threads`, `read_thread`, or `send_message_to_thread` are missing
+
+Older MultiCodex launchers ran a locally re-signed Codex executable. The app-tools service checks code-signing identities in the calling process's ancestry and rejects that executable. Logs can show `dynamic_app_tools_peer_rejected reason=untrusted-code-signing-identity` and `Codex app tools pipe closed`, leaving the model without these tools even when its plugin is enabled.
+
+Update MultiCodex, quit the affected profiles, and run:
+
+```sh
+multicodex sync
+multicodex launch work
+```
+
+The new launcher executes the untouched official app with the existing profile directories. Reopen the chat and check its tools again. Finder launchers retain their profile names and colors; running instances use the official app's Dock branding and macOS privacy identity. The official app must remain installed at the path used during sync. If it moves, set `MULTICODEX_APP` and run `multicodex sync --force`.
+
+This restores the trusted local connection; it does not grant another account access to a chat. A profile can read only chats available to its normal app tools. Asking a model to read a chat and opening a `codex://` URL in macOS are separate paths.
+
+## Running profiles look the same in the Dock
+
+In each running instance, open **Settings → General → Appearance → Dock icon** and select a different built-in icon. The installed build offers ChatGPT and Codex; Space is also available when its option is enabled. The preference is stored per profile and changes the icon at runtime without modifying the signed official app. The ten MultiCodex colors still identify the Finder and Spotlight launchers.
 
 ## A conversation fails with `failed to resolve rollout path`
 
@@ -75,7 +94,7 @@ Titles, pins, archive state, project metadata, and section assignments are merge
 
 ## Permissions reset or signing fails
 
-Profile app metadata changes require a new signature. `multicodex doctor` shows the selected signing identity. If no supported certificate is available, MultiCodex uses an ad-hoc signature; Accessibility or Screen Recording permissions may need to be granted again after sync.
+Profile launcher metadata changes require a new signature. `multicodex doctor` shows the selected signing identity; an ad-hoc signature is the fallback. The running app now uses the original official executable and its macOS privacy identity, so profiles share that runtime's Accessibility and Screen Recording permissions.
 
 If you already have an appropriate identity in your Keychain, select it explicitly:
 

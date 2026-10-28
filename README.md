@@ -128,10 +128,17 @@ multicodex doctor
 
 Use ChatGPT's built-in Dock icon preference to give up to three running instances different icons while keeping the official app's signature and direct chat tools working.
 
+The annotated illustrations below show the built-in controls; their layout may vary by app version.
+
 1. Open the profile from its named launcher, such as **Codex work**.
 2. Press **⌘,** to open Settings, then select **General → Appearance**.
+
+![Annotated illustration highlighting General, Appearance, and the Dock icon picker with ChatGPT, Codex, and optional Space choices](docs/images/dock-icon-settings.png)
+
 3. Under **Dock icon**, choose **ChatGPT**, **Codex**, or **Space** when available.
 4. Repeat in each profile, choosing a different icon. Each profile keeps its own preference.
+
+![Illustrated example assigning ChatGPT to the default profile, Codex to work, and optional Space to personal, with three distinct Dock icons](docs/images/dock-icon-profiles.png)
 
 For example, use ChatGPT for your default account, Codex for work, and Space for personal. If Space is unavailable, you can distinguish two instances with the built-in choices. The ten MultiCodex colors continue to identify the named Finder and Spotlight launchers.
 

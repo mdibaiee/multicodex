@@ -4,7 +4,7 @@ MultiCodex manages local application copies and profile directories that may con
 
 ## Reporting a vulnerability
 
-Use the repository's **Security → Report a vulnerability** feature for private reports:
+For vulnerabilities affecting upstream MultiCodex, use its **Security → Report a vulnerability** feature for private reports:
 
 [Report a vulnerability privately](https://github.com/mahdi-salmanzade/MultiCodex/security/advisories/new)
 
@@ -18,4 +18,4 @@ Please report issues involving profile-path handling, accidental sharing or dele
 
 Separate profiles do not provide an operating-system sandbox. They run under the same macOS user. For network behavior of Codex and configured integrations, consult those services' documentation.
 
-Only the latest MultiCodex release is maintained; fixes are published here as they become available. There is no guaranteed response time.
+This fork receives fixes on `main`; use the latest checkout when reproducing an issue. There is no guaranteed response time.
